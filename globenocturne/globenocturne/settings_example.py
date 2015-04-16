@@ -77,6 +77,11 @@ DATABASES = {
     }    
 }
 
+# for server
+GEOS_LIBRARY_PATH = '/opt/bitnami/postgresql/lib/libgeos_c.so'
+GDAL_LIBRARY_PATH = '/opt/bitnami/postgresql/lib/libgdal.so'
+GDAL_DATA = '/opt/bitnami/postgresql/share/gdal'
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
 
