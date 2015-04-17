@@ -14,4 +14,13 @@ Home Page
 # Home page
 @render_to("globenocturneapp/home.html")
 def home(request):
-    return {}
+    satyears = SatYear.objects.all()
+    satellites = Satellite.objects.all()
+    dmsp_products = DMSPProduct.objects.all()
+    dmsp_datasets = DMSPDataset.objects.all()
+    return {
+        "satyears":satyears,
+        "satellites":satellites,
+        "dmsp_products":dmsp_products,
+        "dmsp_datasets":dmsp_datasets,
+    }

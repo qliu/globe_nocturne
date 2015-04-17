@@ -44,8 +44,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'globenocturneapp',
-    'djgeojson',
-    'leaflet',    
+    'djgeojson',   
 )
 
 MIDDLEWARE_CLASSES = (

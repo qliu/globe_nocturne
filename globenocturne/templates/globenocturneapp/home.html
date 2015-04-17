@@ -1,63 +1,274 @@
 {% load admin_static bootstrapped_goodies_tags %}
-{% load leaflet_tags %}
-
+{% load custom_filter %}{% load custom_tag %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
     <head>
-        {% leaflet_js %}
-        <script src="http://code.jquery.com/jquery-1.11.2.min.js"></script>
-        {% leaflet_css %}
-        <style>
-          .leaflet-container {  /* all maps */
-              width:  800px;
-              height: 600px;
-          }
+        <title>Globe Nocturne</title>
+        
+        <link rel="shortcut icon" href="{% static 'images/blackmarble_favicon.ico' %}">
+        
+        <!-- Bootstrap Core CSS -->
+        <link href="{% static 'bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+        
+        <!-- MetisMenu CSS -->
+        <link href="{% static 'metisMenu/dist/metisMenu.min.css' %}" rel="stylesheet">
 
-          #specialbigmap {
-              height: 800px;
-          }
+        <!-- Custom CSS -->
+        <link href="{% static 'bootstrap/css/sb-admin-2.css' %}" rel="stylesheet">
+        
+        <!-- Leaflet -->
+        <link href="{% static 'leaflet/leaflet.css' %}" rel="stylesheet">
+
+        <!-- Custom Fonts -->
+        <link href="{% static 'font-awesome-4.3.0/css/font-awesome.min.css' %}" rel="stylesheet" type="text/css">
+        
+        <!-- jQuery -->
+        <script src="{% static 'jquery/jquery-1.11.2.min.js' %}"></script>
+        
+        <!-- Leaflet -->
+        <script src="{% static 'leaflet/leaflet.js' %}"></script>
+
+        <!-- Bootstrap Core JavaScript -->
+        <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+        
+        <!-- Metis Menu Plugin JavaScript -->
+        <script src="{% static 'metisMenu/dist/metisMenu.min.js' %}"></script>
+
+        <!-- Custom Theme JavaScript -->
+        <script src="{% static 'bootstrap/js/sb-admin-2.js' %}"></script>        
+        
+        <style>
+            body{
+                padding: 0;
+                margin: 0;
+            }
+            
+            .wrapper {
+                height: 100%;
+            }
+          
+            html, body, #map{
+              height: 100%;
+            }
+            
+            .navbar-header {
+                margin-left: 200px;
+            }
+            
+            .left-side-panel {
+                padding: 0px;
+            }
+            
+            .panel-title {
+                font-weight: bold;
+            }
+            
+            .leaflet-container {
+                padding: 0px;
+            }
+            
+            
+            #specialbigmap {
+                height: 800px;
+            }
         </style>
     </head>
 
     <body>
-        <h1>World Countries</h1>
-        <!--
-        {% leaflet_map "world_countries" callback="world_countries_map_init" %}
-        -->
-        <div id="map" class="leaflet-container"></div>
+        <div id="wrapper" class="wrapper">
+            <nav class="navbar navbar-inverse navbar-static-top" role="navigation" style="margin-bottom: 0">
+                <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{% setting 'ROOT_APP_URL' %}/home/">Globe Nocturen</a>
+            </div>
+            </nav>
+            
+            <div class="wrapper">
+                <!-- Left Side Panel -->
+                <div class="col-sm-12 col-md-4 col-lg-3 left-side-panel">
+                    <div id="panel-dataprop" class="panel panel-default root-panel">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                              <a data-toggle="collapse" href="#collapseLayerControl"><img src="{% static 'images/icon_layer.png' %}" width="21px" height="21px">&nbsp; Layer Control</a>
+                            </h4>
+                        </div>
+                        <div id="collapseLayerControl" class="panel-collapse collapse in">
+                            <div class="panel-body">
+                                <div class="form-group">
+                                    <div class="row">
+                                        <div class="col-sm-4 col-md-4 col-lg-4">
+                                            <label>Year</label>
+                                            <select id="sel-layer-year" class="form-control">
+                                                <option>------</option>
+                                                {% for y in satyears %}
+                                                    <option value="{{y.year}}">{{y.year}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-sm-4 col-md-4 col-lg-4">
+                                            <label>Satellite</label>
+                                            <select id="sel-layer-sat" class="form-control">
+                                                <option>------</option>
+                                                {% for s in satellites %}
+                                                    <option value="{{s.name}}">{{s.name}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-sm-4 col-md-4 col-lg-4">
+                                            <label>Product</label>
+                                            <select id="sel-layer-product" class="form-control">
+                                                <option>------</option>
+                                                {% for p in dmsp_products %}
+                                                    <option value="{{p.name}}">{{p.name}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <br/>
+                                    <label>Dataset</label>
+                                    <select id="sel-layer-dataset" class="form-control">
+                                        <option>------</option>
+                                        {% for d in dmsp_datasets %}
+                                            <option value="{{d.wms_layer}}">{{d.name}}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <br/>
+                                    <button type="button" id="btn-render-dmsp" class="btn btn-warning btn-lg btn-block disabled">Load Imagery</button>
+                                    <br/>
+                                    <label>Transparency: <span id="wms-opacity-value">0.8</span></label>
+                                    <input id="wms-opacity" type="range" min=0 max=1 step=0.1 value=1>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Leaflet Map -->
+                <div id="map" class="col-sm-12 col-md-8 col-lg-9"></div>
+            </div>
+        </div>
+
+        <!-- Bottom JS -->
+        <script>
+            // Initial selections
+            $("#sel-layer-year option[value='2010']").attr('selected', 'selected');
+            $("#sel-layer-sat option[value='F18']").attr('selected', 'selected');
+            $("#sel-layer-product option[value='Stable lights']").attr('selected', 'selected');
+            $("#sel-layer-dataset option[value='F182010.v4c_web.stable_lights.avg_vis.lzw.tif']").attr('selected', 'selected');
+            $("#wms-opacity").val(0.8);
         
-        <script type="text/javascript">
             //function world_countries_map_init(map,options){
-                var mapCRS = L.CRS.EPSG4326;
-                
-                var map = L.map('map',{
-                    center: [39.870808, -98.791620],
-                    zoom:4,
-                    //crs: mapCRS,
-                    minZoom: 2,
-                    maxZoom: 11,
-                })
-                                
-                var baseLayer = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',{
-                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
-                });
-                
-                baseLayer.addTo(map);
-                
-                var wmsLayerDMSP = L.tileLayer.wms("http://mapserver.ngdc.noaa.gov/cgi-bin/public/gcv4/",{
-                    version: '1.3.0',
-                    format: 'image/png',
-                    transparent: true,
-                    layers: 'F182010.v4c_web.stable_lights.avg_vis.lzw.tif',
-                    opacity: '0.6',
-                    crs: mapCRS,
-                }).addTo(map);
-                           
-                var dataurl = '{% url "worldborderdata" %}';
-                $.getJSON(dataurl, function (data) {
-                    L.geoJson(data).addTo(map);
-                });       
+            var mapCRS = L.CRS.EPSG4326;
+            
+            var map = L.map('map',{
+                center: [39.870808, -98.791620],
+                zoom:4,
+                //crs: mapCRS,
+                minZoom: 3,
+                maxZoom: 11,
+            })
+                            
+            var baseLayer = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',{
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+            });
+            
+            baseLayer.addTo(map);
+            
+            
+            var basemaps = {
+                'Base Map': baseLayer,
+            }
+            
+            var previous_layer = "F182010.v4c_web.stable_lights.avg_vis.lzw.tif";
+            
+            
+            var wmsLayerDMSP = L.tileLayer.wms("http://mapserver.ngdc.noaa.gov/cgi-bin/public/gcv4/",{
+                version: '1.3.0',
+                format: 'image/png',
+                transparent: true,
+                layers: 'F182010.v4c_web.stable_lights.avg_vis.lzw.tif',
+                opacity: '0.6',
+                crs: mapCRS,
+            }).addTo(map);
+            
+            
+            // Create layer control
+            
+            //layercontrol = L.control.layers(basemaps,layers).addTo(map);
+
+            // Opacity slider
+            $("#wms-opacity").change(function(){
+                var current_layer = $("#sel-layer-dataset option:selected").val();
+                $("#wms-opacity-value").html(this.value);
+                wmsLayerDMSP.setOpacity(this.value);
+            });
+            
+            /*
+            var dataurl = '{% url "worldborderdata" %}';
+            $.getJSON(dataurl, function (data) {
+                L.geoJson(data).addTo(map);
+            });       
+            */
                 
             //}
+
+            function select_dataset(){
+                var year = $("#sel-layer-year option:selected").text();
+                var sat = $("#sel-layer-sat option:selected").text();
+                var product = $("#sel-layer-product option:selected").text();
+                var dataset = year + "-" + sat + "-" + product;
+                var sel_dataset = 0;
+                $("#sel-layer-dataset option").each(function() {
+                    if($(this).text() == dataset) {
+                        $(this).attr('selected', 'selected');
+                        sel_dataset = 1;
+                        return false;
+                    }                        
+                });
+                if (sel_dataset == 0){
+                    $("#sel-layer-dataset option:first").attr('selected', 'selected');
+                    $("#btn-render-dmsp").addClass('disabled');
+                }
+                else {
+                    if ($("#btn-render-dmsp").hasClass('disabled')){
+                        $("#btn-render-dmsp").removeClass('disabled');
+                    }
+                }
+            }
+        
+            $("#sel-layer-year").change(function(){select_dataset();});
+            $("#sel-layer-sat").change(function(){select_dataset();});
+            $("#sel-layer-product").change(function(){select_dataset();});
+            $("#sel-layer-dataset").change(function(){
+                if($("#sel-layer-dataset option:selected").index()>0){
+                    if ($("#btn-render-dmsp").hasClass('disabled')){
+                        $("#btn-render-dmsp").removeClass('disabled');
+                    }
+                }
+                else{
+                    $("#btn-render-dmsp").addClass('disabled');
+                }
+            });
+            $("#btn-render-dmsp").click(function(){
+                add_layer = $("#sel-layer-dataset option:selected").val();
+                if (add_layer !== previous_layer){
+                    wmsLayerDMSP.setParams({layers:add_layer});
+                    previous_layer = add_layer;
+                /*
+                    source.removeSubLayer(previous_layer);
+                    previous_layer = add_layer;
+                    source.addSubLayer(add_layer);
+                    source.addTo(map);
+                    //layercontrol.addOverlay(source.getLayer($("#sel-layer-dataset option:selected").val()),$("#sel-layer-dataset option:selected").text());
+                */
+                }
+            });
         </script>
+        
+
     </body>
 </html>

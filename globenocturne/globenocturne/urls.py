@@ -9,5 +9,8 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     
     # GlobeNocturne App URLs
-    url(r'^globenocturne/',include('globenocturneapp.urls')),    
+    url(r'^globenocturne/',include('globenocturneapp.urls')),
+    
+    # 3rd party app url
+    url(r'^chaining/', include('smart_selects.urls')),    
 )
