@@ -231,6 +231,7 @@
                     $("#btn-render-dmsp").addClass('disabled');
                 }
                 else {
+                    $("#sel-layer-dataset option").trigger('create');
                     if ($("#btn-render-dmsp").hasClass('disabled')){
                         $("#btn-render-dmsp").removeClass('disabled');
                     }
