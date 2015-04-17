@@ -219,6 +219,7 @@
                 var product = $("#sel-layer-product option:selected").text();
                 var dataset = year + "-" + sat + "-" + product;
                 var sel_dataset = 0;
+                $("#sel-layer-dataset option:selected").removeAttr("selected")
                 $("#sel-layer-dataset option").each(function() {
                     if($(this).text() == dataset) {
                         $(this).attr('selected', 'selected');
@@ -231,7 +232,6 @@
                     $("#btn-render-dmsp").addClass('disabled');
                 }
                 else {
-                    $("#sel-layer-dataset option").trigger('create');
                     if ($("#btn-render-dmsp").hasClass('disabled')){
                         $("#btn-render-dmsp").removeClass('disabled');
                     }
