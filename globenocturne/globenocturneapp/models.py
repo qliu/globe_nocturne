@@ -4,7 +4,7 @@ class SatYear(models.Model):
     year = models.IntegerField(primary_key=True)
     
     def __unicode__(self):
-            return str(self.year)
+        return str(self.year)
     
     class Meta:
         verbose_name = 'Year'
@@ -70,7 +70,7 @@ class DMSPDataset(models.Model):
 
 
 class WorldBorder(models.Model):
-    gid = models.IntegerField(primary_key=True)
+#    gid = models.IntegerField(primary_key=True)
     iso = models.CharField(max_length=2)
     country = models.CharField(max_length=50)
     countryaff = models.CharField(max_length=50)
@@ -84,3 +84,162 @@ class WorldBorder(models.Model):
     class Meta:
         verbose_name = 'World Border'
         db_table = u'worldborder'
+
+class WorldCountry(models.Model):
+#    id = models.IntegerField(primary_key=True)
+    fips = models.CharField(max_length=2,null=True,blank=True)
+    iso = models.CharField(max_length=2,null=True,blank=True)
+    iso3digit = models.CharField(max_length=3,null=True,blank=True)
+    name = models.CharField(max_length=200,null=True,blank=True)
+    area_km = models.FloatField(null=True,blank=True)
+    
+    def __unicode__(self):
+        return self.fips
+    
+    def previous(self):
+        try:
+            previous_records = WorldCountry.objects.filter(id__lt=self.id)
+            previous_id = previous_records.order_by('-id')[0].id
+            return WorldCountry.objects.get(id=previous_id)
+        except:
+            return None
+        
+    def next(self):
+        try:
+            next_records = WorldCountry.objects.filter(id__gt=self.id)
+            next_id = next_records.order_by('id')[0].id
+            return WorldCountry.objects.get(id=next_id)
+        except:
+            return None    
+    
+    class Meta:
+        verbose_name = 'World Country'
+        db_table = u'world_countries'
+        
+class WorldPoulation(models.Model):
+#    id = models.IntegerField(primary_key=True)
+    country = models.ForeignKey('WorldCountry')
+    year = models.IntegerField(null=True,blank=True)
+    value = models.FloatField(null=True,blank=True)
+    
+    def __unicode__(self):
+        return self.fips
+    
+    def previous(self):
+        try:
+            previous_records = WorldPoulation.objects.filter(id__lt=self.id)
+            previous_id = previous_records.order_by('-id')[0].id
+            return WorldPoulation.objects.get(id=previous_id)
+        except:
+            return None
+        
+    def next(self):
+        try:
+            next_records = WorldPoulation.objects.filter(id__gt=self.id)
+            next_id = next_records.order_by('id')[0].id
+            return WorldPoulation.objects.get(id=next_id)
+        except:
+            return None    
+    
+    class Meta:
+        verbose_name = 'World Poulation'
+        db_table = u'world_population'
+        
+class WorldGDP(models.Model):
+#    id = models.IntegerField(primary_key=True)
+    country = models.ForeignKey('WorldCountry')
+    year = models.IntegerField(null=True,blank=True)
+    value = models.FloatField(null=True,blank=True)
+    
+    def __unicode__(self):
+        return str(self.value)
+    
+    def previous(self):
+        try:
+            previous_records = WorldGDP.objects.filter(id__lt=self.id)
+            previous_id = previous_records.order_by('-id')[0].id
+            return WorldGDP.objects.get(id=previous_id)
+        except:
+            return None
+        
+    def next(self):
+        try:
+            next_records = WorldGDP.objects.filter(id__gt=self.id)
+            next_id = next_records.order_by('id')[0].id
+            return WorldGDP.objects.get(id=next_id)
+        except:
+            return None    
+    
+    class Meta:
+        verbose_name = 'World GDP'
+        db_table = u'world_gdp'
+
+
+class WorldSOL(models.Model):
+#    id = models.IntegerField(primary_key=True)
+    country = models.ForeignKey('WorldCountry')
+    year = models.IntegerField(null=True,blank=True)
+    value = models.FloatField(null=True,blank=True)
+    
+    def __unicode__(self):
+        return str(self.value)
+        
+    def previous(self):
+        try:
+            previous_records = WorldSOL.objects.filter(id__lt=self.id)
+            previous_id = previous_records.order_by('-id')[0].id
+            return WorldSOL.objects.get(id=previous_id)
+        except:
+            return None
+        
+    def next(self):
+        try:
+            next_records = WorldSOL.objects.filter(id__gt=self.id)
+            next_id = next_records.order_by('id')[0].id
+            return WorldSOL.objects.get(id=next_id)
+        except:
+            return None    
+    
+    class Meta:
+        verbose_name = 'World Sum of Lights'
+        db_table = u'world_sol'
+
+class WorldOriginalSOL(models.Model):
+    #    id = models.IntegerField(primary_key=True)
+    country = models.ForeignKey('WorldCountry')
+    year = models.IntegerField(null=True,blank=True)
+    sat = models.CharField(max_length=3)    
+    sol = models.FloatField(null=True,blank=True)
+    dn_range_min = models.FloatField(null=True,blank=True)
+    dn_range_max = models.FloatField(null=True,blank=True)
+    pixels_in_polygon = models.IntegerField(null=True,blank=True)
+    pixels_in_range = models.IntegerField(null=True,blank=True)
+    pixels_zero = models.IntegerField(null=True,blank=True)
+    dn_min = models.FloatField(null=True,blank=True)
+    dn_max = models.FloatField(null=True,blank=True)
+    avg = models.FloatField(null=True,blank=True)
+    
+    
+    def __unicode__(self):
+        return "%s-%s-%s" % (self.country,self.sat,self.year)
+        
+    def previous(self):
+        try:
+            previous_records = WorldOriginalSOL.objects.filter(id__lt=self.id)
+            previous_id = previous_records.order_by('-id')[0].id
+            return WorldOriginalSOL.objects.get(id=previous_id)
+        except:
+            return None
+        
+    def next(self):
+        try:
+            next_records = WorldOriginalSOL.objects.filter(id__gt=self.id)
+            next_id = next_records.order_by('id')[0].id
+            return WorldOriginalSOL.objects.get(id=next_id)
+        except:
+            return None    
+    
+    class Meta:
+        verbose_name = 'World Original Sum of Lights Records'
+        db_table = u'world_original_sol'
+    
