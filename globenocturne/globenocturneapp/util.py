@@ -17,6 +17,7 @@ import re # Regular Expression operations
 import StringIO
 import sys,os
 import tempfile,zipfile
+import collections
 
 # ---------------
 # Django Imports

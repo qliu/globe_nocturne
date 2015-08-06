@@ -90,8 +90,10 @@ class WorldCountry(models.Model):
     fips = models.CharField(max_length=2,null=True,blank=True)
     iso = models.CharField(max_length=2,null=True,blank=True)
     iso3digit = models.CharField(max_length=3,null=True,blank=True)
-    name = models.CharField(max_length=200,null=True,blank=True)
-    area_km = models.FloatField(null=True,blank=True)
+    name = models.CharField(max_length=250,null=True,blank=True)
+    capital = models.CharField(max_length=250,null=True,blank=True)
+    continent = models.CharField(max_length=250,null=True,blank=True)
+#    area_km = models.FloatField(null=True,blank=True)
     
     def __unicode__(self):
         return self.fips
@@ -121,9 +123,6 @@ class WorldPoulation(models.Model):
     country = models.ForeignKey('WorldCountry')
     year = models.IntegerField(null=True,blank=True)
     value = models.FloatField(null=True,blank=True)
-    
-    def __unicode__(self):
-        return self.fips
     
     def previous(self):
         try:
@@ -242,4 +241,74 @@ class WorldOriginalSOL(models.Model):
     class Meta:
         verbose_name = 'World Original Sum of Lights Records'
         db_table = u'world_original_sol'
+        
+class WorldCountrySOL(models.Model):
+    #    id = models.IntegerField(primary_key=True)
+    country = models.ForeignKey('WorldCountry')
+    year = models.IntegerField(null=True,blank=True)
+    sat = models.CharField(max_length=3)    
+    sol = models.IntegerField(null=True,blank=True)
+    pixel_count = models.IntegerField(null=True,blank=True)
+    dn_mean = models.FloatField(null=True,blank=True)
+    dn_stddev = models.FloatField(null=True,blank=True)
+    dn_min = models.IntegerField(null=True,blank=True)
+    dn_max = models.IntegerField(null=True,blank=True)
+    
+    def __unicode__(self):
+        return "%s-%s-%s" % (self.country,self.sat,self.year)
+        
+    def previous(self):
+        try:
+            previous_records = WorldOriginalSOL.objects.filter(id__lt=self.id)
+            previous_id = previous_records.order_by('-id')[0].id
+            return WorldOriginalSOL.objects.get(id=previous_id)
+        except:
+            return None
+        
+    def next(self):
+        try:
+            next_records = WorldOriginalSOL.objects.filter(id__gt=self.id)
+            next_id = next_records.order_by('id')[0].id
+            return WorldOriginalSOL.objects.get(id=next_id)
+        except:
+            return None    
+    
+    class Meta:
+        verbose_name = 'World Country Sum of Light'
+        db_table = u'world_country_sol'
+        
+class WorldCountrySOLCali(models.Model):
+    #    id = models.IntegerField(primary_key=True)
+    country = models.ForeignKey('WorldCountry')
+    year = models.IntegerField(null=True,blank=True)
+    sat = models.CharField(max_length=3)    
+    sol = models.IntegerField(null=True,blank=True)
+    pixel_count = models.IntegerField(null=True,blank=True)
+    dn_mean = models.FloatField(null=True,blank=True)
+    dn_stddev = models.FloatField(null=True,blank=True)
+    dn_min = models.IntegerField(null=True,blank=True)
+    dn_max = models.IntegerField(null=True,blank=True)
+    
+    def __unicode__(self):
+        return "%s-%s-%s" % (self.country,self.sat,self.year)
+        
+    def previous(self):
+        try:
+            previous_records = WorldOriginalSOL.objects.filter(id__lt=self.id)
+            previous_id = previous_records.order_by('-id')[0].id
+            return WorldOriginalSOL.objects.get(id=previous_id)
+        except:
+            return None
+        
+    def next(self):
+        try:
+            next_records = WorldOriginalSOL.objects.filter(id__gt=self.id)
+            next_id = next_records.order_by('id')[0].id
+            return WorldOriginalSOL.objects.get(id=next_id)
+        except:
+            return None    
+    
+    class Meta:
+        verbose_name = 'World Country Sum of Light Calibrated'
+        db_table = u'world_country_sol_cali'
     

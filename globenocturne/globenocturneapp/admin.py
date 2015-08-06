@@ -24,8 +24,8 @@ admin.site.register(DMSPDataset,DMSPDatasetAdmin)
 admin.site.register(WorldBorder,admin.GeoModelAdmin)
 
 class WorldCountryAdmin(admin.ModelAdmin):
-    fields = ['fips','iso','iso3digit','name','area_km']
-    list_display = ('fips','iso','iso3digit','name','area_km')
+    fields = ['id','fips','iso','iso3digit','name','capital','continent']
+    list_display = ('fips','iso','iso3digit','name','capital','continent')
 admin.site.register(WorldCountry,WorldCountryAdmin)
 
 class WorldPoulationAdmin(admin.ModelAdmin):
@@ -47,3 +47,13 @@ class WorldOriginalSOLAdmin(admin.ModelAdmin):
     fields = ['country','year','sat','sol','dn_range_min','dn_range_max','pixels_in_polygon','pixels_in_range','pixels_zero','dn_min','dn_max','avg']
     list_display = ('country','year','sat','sol','dn_range_min','dn_range_max','pixels_in_polygon','pixels_in_range','pixels_zero','dn_min','dn_max','avg')
 admin.site.register(WorldOriginalSOL,WorldOriginalSOLAdmin)
+
+class WorldCountrySOLAdmin(admin.ModelAdmin):    
+    fields = ['country','year','sat','sol','pixel_count','dn_mean','dn_stddev','dn_min','dn_max']
+    list_display = ('country','year','sat','sol','pixel_count','dn_mean','dn_stddev','dn_min','dn_max')
+admin.site.register(WorldCountrySOL,WorldCountrySOLAdmin)
+
+class WorldCountrySOLCaliAdmin(admin.ModelAdmin):    
+    fields = ['country','year','sat','sol','pixel_count','dn_mean','dn_stddev','dn_min','dn_max']
+    list_display = ('country','year','sat','sol','pixel_count','dn_mean','dn_stddev','dn_min','dn_max')
+admin.site.register(WorldCountrySOLCali,WorldCountrySOLCaliAdmin)

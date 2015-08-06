@@ -89,6 +89,37 @@
             #specialbigmap {
                 height: 800px;
             }
+            
+            path.line {
+              fill: none;
+              stroke: #666;
+              stroke-width: 1.5px;
+            }
+
+            path.area {
+              fill: #e7e7e7;
+            }
+
+            .axis {
+              shape-rendering: crispEdges;
+            }
+
+            .x.axis line {
+              stroke: #fff;
+            }
+
+            .x.axis .minor {
+              stroke-opacity: .5;
+            }
+
+            .x.axis path {
+              display: none;
+            }
+
+            .y.axis line, .y.axis path {
+              fill: none;
+              stroke: #000;
+            }
         </style>
     </head>
 
@@ -175,8 +206,8 @@
                             </h4>
                         </div>
                         <div id="collapseCountrySummary" class="panel-collapse collapse in">
-                            <div class="panel-body">
-                                <img src="{% static 'images/US_sol_line.png' %}" width="300px" height="200px">
+                            <div class="panel-body" id="linechart-sol">
+                                <!--<img src="{% static 'images/US_sol_line.png' %}" width="300px" height="200px">-->
                             </div>
                         </div>
                     </div>
@@ -187,6 +218,9 @@
         </div>
 
         <!-- Bottom JS -->
+        <script src='{% static "jquery.cookie/jquery.cookie.js" %}'></script>
+        <script src='{% static "d3-3.5.5/d3.min.js" %}'></script>
+        
         <script>
             // Initial selections
             $("#sel-layer-year option[value='2010']").attr('selected', 'selected');
@@ -313,6 +347,135 @@
                 */
                 }
             });
+            
+            // Dealing with Events
+            var popup = L.popup();
+            
+            function onMapClick(e){                    
+                var csrftoken = $.cookie('csrftoken');
+                var url='{% url "url_get_country" %}';
+                $.ajax({
+                    url : url, // the endpoint
+                    type : "POST", // http method
+                    data : {
+                        latlng : e.latlng.toString(),
+                        csrfmiddlewaretoken: csrftoken,
+                    }, // data sent with the delete request
+                    success : function(json) {
+                        console.log("get country successful!");
+                        console.log(json.data);
+                        popup_content = "Current lat,lng: " + e.latlng.toString() + "<br/>Current country: " + json.country;
+                        popup
+                        .setLatLng(e.latlng)
+                        .setContent(popup_content)
+                        .openOn(map);
+                        
+                        var parse = d3.time.format("%b %Y").parse;
+                        var data = jQuery.parseJSON(json.data);
+                        data.forEach(function(d){
+                            d.year = new Date(d.year, 0);
+                            d.sol = +d.sol;
+                        });
+
+                        // Line chart of SOL
+                        var margin = {top: 10, right: 10, bottom: 10, left: 10},
+                            width = 350 - margin.left - margin.right,
+                            height = 400 - margin.top - margin.bottom;
+
+                        // Scales and axes. Note the inverted domain for the y-scale: bigger is up!
+                        var x = d3.time.scale().range([0, width]),
+                            y = d3.scale.linear().range([height, 0]),
+                            xAxis = d3.svg.axis().scale(x).tickSize(-height).tickSubdivide(true),
+                            yAxis = d3.svg.axis().scale(y).ticks(4).orient("right");
+
+                        // An area generator, for the light fill.
+                        var area = d3.svg.area()
+                            .interpolate("monotone")
+                            .x(function(d) { return x(d.year); })
+                            .y0(height)
+                            .y1(function(d) { return y(d.sol); });
+
+                        // A line generator, for the dark stroke.
+                        var line = d3.svg.line()
+                            .interpolate("monotone")
+                            .x(function(d) { return x(d.year); })
+                            .y(function(d) { return y(d.sol); });
+
+                        // Filter to one symbol;
+                        var values = data.filter(function(d) {
+                            return d.symbol == "Sum of Lights";
+                        });
+
+                        // Compute the minimum and maximum year, and the maximum sol.
+                        x.domain([data[0].year, data[data.length - 1].year]);
+                        y.domain([0, d3.max(data, function(d) { return d.sol; })]).nice();
+
+                        // Add an SVG element with the desired dimensions and margin.
+                        var svg = d3.select("#linechart-sol").append("svg")
+                          .attr("width", width + margin.left + margin.right)
+                          .attr("height", height + margin.top + margin.bottom)
+                        .append("g")
+                          .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                          .on("click", click);
+
+                        // Add the clip path.
+                        svg.append("clipPath")
+                          .attr("id", "clip")
+                        .append("rect")
+                          .attr("width", width)
+                          .attr("height", height);
+
+                        // Add the area path.
+                        svg.append("path")
+                          .attr("class", "area")
+                          .attr("clip-path", "url(#clip)")
+                          .attr("d", area(values));
+
+                        // Add the x-axis.
+                        svg.append("g")
+                          .attr("class", "x axis")
+                          .attr("transform", "translate(0," + height + ")")
+                          .call(xAxis);
+
+                        // Add the y-axis.
+                        svg.append("g")
+                          .attr("class", "y axis")
+                          .attr("transform", "translate(" + width + ",0)")
+                          .call(yAxis);
+
+                        // Add the line path.
+                        svg.append("path")
+                          .attr("class", "line")
+                          .attr("clip-path", "url(#clip)")
+                          .attr("d", line(values));
+
+                        // Add a small label for the symbol name.
+                        svg.append("text")
+                          .attr("x", width - 6)
+                          .attr("y", height - 6)
+                          .style("text-anchor", "end")
+                          .text("Sum of Lights");
+
+                        // On click, update the x-axis.
+                        function click() {
+                        var n = values.length - 1,
+                            i = Math.floor(Math.random() * n / 2),
+                            j = i + Math.floor(Math.random() * n / 2) + 1;
+                        x.domain([values[i].year, values[j].year]);
+                        var t = svg.transition().duration(750);
+                        t.select(".x.axis").call(xAxis);
+                        t.select(".area").attr("d", area(values));
+                        t.select(".line").attr("d", line(values));
+                        }
+                    },
+                    error : function(xhr,errmsg,err) {
+                        console.log("get country failed!");
+                        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                    }
+                });
+            }
+            // Event - On map click
+            map.on("click",onMapClick);
         </script>
         
 
